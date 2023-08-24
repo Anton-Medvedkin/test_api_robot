@@ -1,31 +1,28 @@
 
 *** Settings ***
 Library           RequestsLibrary
+Resource          ../resources/keywords.robot
+Resource          ../resources/base_url.robot
 
-*** Variables ***
-${BASE_URL}       http://qa-scooter.praktikum-services.ru/api/v1/
-
-*** Keywords ***
-Create Order
-    ${json_data}=    Create Dictionary    firstName=Anton    lastName=Uchiha    address=Konoha, 142 apt.    metroStation=4    phone=+7 800 355 35 35    rentTime=5    deliveryDate=2020-06-06    comment=Saske, come back to Konoha    color=[BLACK]
-    ${response}=     POST  ${BASE_URL}orders    json=${json_data}
-    ${track}=        ${response.json()['track']}
-    [Return]        ${track}
 
 *** Test Cases ***
 Test Successful Receipt of Order
     ${create_order} =  Create Order
-    ${response} =  GET  ${BASE_URL}orders/track?t=${create_order}
-    Should Be Equal  ${response.status_code}  200
-    Should Contain  order  ${response.json()}
+    ${url}=    Set Variable    ${BASE_URL}orders/track
+    ${params}=    Create Dictionary    t=${create_order}
+    ${response}=    GET    ${url}    params=${params}  expected_status=200
+    Status Should Be  200  ${response}
+    Should Contain    ${response.json()}    order
 
 Test Without an Order Number
-    ${response} =  GET  ${BASE_URL}orders/track
-    Should Be Equal  ${response.status_code}  400
+    ${response} =  GET  ${BASE_URL}orders/track    expected_status=400
+    Status Should Be  400  ${response}
     Should Be Equal As Strings  ${response.json()}  {'code': 400, 'message': 'Недостаточно данных для поиска'}
 
 Test Non-Existent Order Number
-    ${response} =  GET  ${BASE_URL}orders/track?t=123456789
-    Should Be Equal  ${response.status_code}  404
+    ${url}=    Set Variable    ${BASE_URL}orders/track
+    ${params}=    Create Dictionary    t=123456789
+    ${response}=    GET    ${url}    params=${params}  expected_status=404
+    Status Should Be  404  ${response}
     Should Be Equal As Strings  ${response.json()}  {'code': 404, 'message': 'Заказ не найден'}
 

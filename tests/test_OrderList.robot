@@ -1,15 +1,13 @@
 
 *** Settings ***
 Library           RequestsLibrary
+Library           Collections
+Resource          ../resources/base_url.robot
 
-*** Variables ***
-${BASE_URL}       http://qa-scooter.praktikum-services.ru/api/v1/
 
 *** Test Cases ***
 Test List Order
-    ${response} =  GET  ${BASE_URL}orders
+    ${response} =  GET  ${BASE_URL}/orders  expected_status=200
     ${order_data} =  Set Variable  ${response.json()}
-    Should Be Equal  ${response.status_code}  200
-    Should Contain  orders  ${order_data}
-    Should Be List  ${order_data["orders"]}
-
+    Status Should Be  200  ${response}
+    List Should Contain Value  ${order_data}  orders
